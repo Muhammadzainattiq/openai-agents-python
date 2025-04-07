@@ -131,28 +131,17 @@ robot_agent = pirate_agent.clone(
 )
 ```
 
-## Additional Methods
+## Forcing tool use
 
-### `get_system_prompt`
+Supplying a list of tools doesn't always mean the LLM will use a tool. You can force tool use by setting [`ModelSettings.tool_choice`][agents.model_settings.ModelSettings.tool_choice]. Valid values are:
 
-The `get_system_prompt` method retrieves the system prompt for the agent. This can be a static string or dynamically generated instructions.
+1. `auto`, which allows the LLM to decide whether or not to use a tool.
+2. `required`, which requires the LLM to use a tool (but it can intelligently decide which tool).
+3. `none`, which requires the LLM to _not_ use a tool.
+4. Setting a specific string e.g. `my_tool`, which requires the LLM to use that specific tool.
 
-```python
-system_prompt = await agent.get_system_prompt(context)
-print("System Prompt:", system_prompt)
-```
+!!! note
 
-- **Parameters**: 
-  - `run_context`: The context in which the agent is running.
-- **Returns**: A string representing the system prompt.
+    To prevent infinite loops, the framework automatically resets `tool_choice` to "auto" after a tool call. This behavior is configurable via [`agent.reset_tool_choice`][agents.agent.Agent.reset_tool_choice]. The infinite loop is because tool results are sent to the LLM, which then generates another tool call because of `tool_choice`, ad infinitum.
 
-### `list_tools`
-
-The `list_tools` method provides a list of all tools the agent has access to. This is useful for debugging and monitoring the agent's capabilities.
-
-```python
-tool_names = agent.list_tools()
-print("Tools:", tool_names)
-```
-
-- **Returns**: A list of tool names or descriptions. Logs a warning if no tools are available.
+    If you want the Agent to completely stop after a tool call (rather than continuing with auto mode), you can set [`Agent.tool_use_behavior="stop_on_first_tool"`] which will directly use the tool output as the final response without further LLM processing.
